@@ -1,0 +1,1000 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Backcourt Rally</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --ink:#eef2f5; --muted:#9fb0bf; --hall:#0e1822; --panel:rgba(12,22,31,.86);
+  --line:rgba(238,242,245,.14); --accent:#f2c230; --you:#e5533d; --cpu:#3d8fe5;
+  --good:#5fd08a; --warn:#f2c230; --bad:#ef5b4b;
+  --display:"Saira Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+[hidden]{display:none!important}
+html,body{height:100%;background:var(--hall);color:var(--ink);font-family:var(--body);overflow:hidden}
+#app{position:relative;height:100%;width:100%;overflow:hidden;user-select:none;-webkit-user-select:none}
+#c{display:block;width:100%;height:100%;touch-action:none;outline:none}
+
+/* broadcast score bug, top left */
+.bug{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:16px;display:flex;align-items:stretch;font-family:var(--display);pointer-events:none;filter:drop-shadow(0 6px 18px rgba(0,0,0,.45));animation:bugIn .5s cubic-bezier(.2,.9,.3,1) both}
+@keyframes bugIn{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+.bug-logo{width:62px;background:linear-gradient(160deg,#1b2a6b,#0b1236);display:grid;place-items:center;border-radius:4px 0 0 4px;border-right:2px solid var(--accent)}
+.bug-logo svg{width:44px;height:44px}
+.bug-body{display:flex;flex-direction:column;min-width:262px}
+.bug-head{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#0b1236;color:#c7cff0;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:3px 10px 2px}
+.bug-head b{color:var(--accent);font-weight:800}
+.bug-head>span{white-space:nowrap}
+.bug-row{position:relative;display:flex;align-items:center;height:30px;background:#f4f6fa;color:#0d1530;border-top:1px solid #d5dbe8}
+.bug-row:last-child{border-radius:0 0 4px 0}
+.bug-row .srv{width:14px;display:grid;place-items:center;align-self:stretch;background:transparent;border:0;border-radius:0}
+.bug-row .srv::after{content:"";width:0;height:0;border-left:7px solid transparent;border-top:5px solid transparent;border-bottom:5px solid transparent}
+.bug-row .srv.on::after{border-left-color:#e2a400}
+.bug-row .flag{width:24px;height:16px;border-radius:2px;margin-right:9px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.bug-row.you .flag{background:linear-gradient(180deg,#d9412b 0 33%,#f4f4f0 33% 66%,#1c2330 66%)}
+.bug-row.cpu .flag{background:linear-gradient(90deg,#2f7fd6 0 50%,#f4f4f0 50%);position:relative}
+.bug-row .nm{flex:1;font-size:19px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;line-height:1;padding-top:2px}
+.bug-row .gs{display:flex;height:100%}
+.bug-row .gs span{width:30px;display:grid;place-items:center;font-size:18px;font-weight:700;color:#7a849c;font-variant-numeric:tabular-nums;border-left:1px solid #d5dbe8}
+.bug-row .gs span.w{color:#0d1530;font-weight:800}
+.bug-row .pts{width:44px;align-self:stretch;display:grid;place-items:center;font-size:23px;font-weight:800;color:#fff;background:#13205a;font-variant-numeric:tabular-nums;transition:background-color .3s}
+.bug-row.you .pts{background:#7c1d16} .bug-row.cpu .pts{background:#123c74}
+.bug-row .pts.bump{animation:ptsBump .6s ease}
+@keyframes ptsBump{0%{background:var(--accent);color:#1a1405;transform:scale(1.12)}100%{transform:none}}
+.bug-row .st{position:absolute;left:14px;right:44px;bottom:0;height:3px;background:rgba(13,21,48,.08)}
+.bug-row .st i{display:block;height:100%;width:100%;transition:width .3s,background-color .3s}
+.bug-row.you .st i{background:#d9412b} .bug-row.cpu .st i{background:#2f7fd6}
+.bug-row .st i.low{background:#ef5b4b;animation:lowPulse 1s infinite}
+@keyframes lowPulse{50%{opacity:.4}}
+.bug-tag{align-self:flex-end;margin-left:6px;font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#1a1405;background:var(--accent);padding:5px 9px 4px;border-radius:3px;opacity:0;transform:translateX(-8px);transition:opacity .25s,transform .25s}
+.bug-tag.on{opacity:1;transform:none}
+.bug-tag.match{background:var(--bad);color:#fff}
+@media (max-width:640px){.bug{left:10px;transform-origin:top left;transform:scale(.82);animation:none}.ev-long{display:none}}
+
+.call{position:absolute;top:calc(env(safe-area-inset-top,0px) + 84px);left:50%;transform:translateX(-50%);font-family:var(--display);font-weight:800;text-transform:uppercase;letter-spacing:.08em;font-size:20px;text-shadow:0 2px 10px rgba(0,0,0,.7);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .3s}
+.call.show{opacity:1;transition:none}
+.call small{font-weight:600;font-size:15px;letter-spacing:.06em;opacity:.85;margin-left:8px}
+.call em{font-style:normal;font-size:13px;margin-left:8px;padding:1px 6px;border-radius:3px;background:rgba(255,255,255,.12)}
+
+#msg{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;transition:opacity .25s;opacity:0;width:min(90vw,520px)}
+#msg.show{opacity:1}
+#msg .big{font-family:var(--display);font-weight:800;font-size:clamp(34px,7vw,64px);letter-spacing:.04em;text-transform:uppercase;text-shadow:0 4px 18px rgba(0,0,0,.55);line-height:1}
+#msg .sub{margin-top:6px;font-size:15px;color:var(--ink);opacity:.9;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+
+.meters{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);width:min(380px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:8px;pointer-events:none;transition:border-color .15s,box-shadow .15s}
+.meters.inrange{border-color:rgba(95,208,138,.8);box-shadow:0 0 0 1px rgba(95,208,138,.35),0 0 18px rgba(95,208,138,.2)}
+.mrow{display:grid;grid-template-columns:70px 1fr 38px;align-items:center;gap:10px}
+.mlabel{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.mnum{font-family:var(--display);font-weight:700;font-size:15px;text-align:right;font-variant-numeric:tabular-nums}
+.bar{position:relative;height:10px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:5px}
+#stamFill{background:linear-gradient(90deg,#3fae6e,var(--good));width:100%}
+#stamFill.low{background:var(--bad)}
+#powFill{background:linear-gradient(90deg,#c99a1c,var(--accent))}
+#powFill.over{background:linear-gradient(90deg,var(--accent),var(--bad))}
+#powFill.def{background:linear-gradient(90deg,#3b8fd8,#6fd0ff)}
+.bar b{position:absolute;top:0;bottom:0;left:93%;right:0;background:repeating-linear-gradient(135deg,rgba(239,91,75,.55) 0 4px,rgba(239,91,75,.25) 4px 8px)}
+.powrow{opacity:.35;transition:opacity .2s}
+.bar em.cap{position:absolute;top:0;bottom:0;right:0;width:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.18) 0 3px,rgba(0,0,0,.25) 3px 6px)}
+.bar s.band{position:absolute;top:0;bottom:0;left:25%;width:30%;background:rgba(95,208,138,.35);border-inline:1px solid rgba(95,208,138,.9);display:none}
+.bar s.band.on{display:block}
+.aimtxt{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.powrow.on{opacity:1}
+
+.hint{position:absolute;left:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);font-size:12.5px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:8px 12px;border-radius:6px;display:grid;gap:5px;max-width:230px;pointer-events:none}
+kbd{font-family:var(--display);font-weight:700;font-size:12px;color:var(--ink);background:rgba(255,255,255,.08);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;margin-right:4px;letter-spacing:.04em}
+@media (max-width:980px){.hint{display:none}}
+
+.overlay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(8,14,20,.55);backdrop-filter:blur(3px);padding:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:26px 26px 22px;width:min(470px,100%);box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:100%;overflow:auto}
+.eyebrow{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.22em;color:var(--accent);text-transform:uppercase}
+.card h1{font-family:var(--display);font-weight:800;font-size:46px;line-height:.95;margin:6px 0 10px;text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
+.card p{color:var(--muted);line-height:1.5;margin:0 0 16px;font-size:14.5px}
+.ctrl{display:grid;grid-template-columns:auto 1fr;gap:7px 14px;font-size:14px;margin:0 0 20px;align-items:center}
+.ctrl dt{white-space:nowrap} .ctrl dd{margin:0;color:var(--muted)}
+.lvl{display:flex;gap:8px}
+.modes{display:flex;gap:0;margin:0 0 10px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.modes button{flex:1;font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;padding:8px 4px;background:transparent;color:var(--muted);border:0;border-right:1px solid var(--line);cursor:pointer}
+.modes button:last-child{border-right:0}
+.modes button[aria-pressed="true"]{background:rgba(242,194,48,.16);color:var(--accent)}
+.modes button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.pausebtn{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:16px;font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 14px;cursor:pointer}
+.pausebtn:hover,.pausebtn:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
+.menubtns{display:grid;gap:8px;margin:14px 0 4px}
+.menubtns button{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.1em;text-transform:uppercase;padding:12px 0;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);cursor:pointer}
+.menubtns button.primary{background:var(--accent);color:#1a1405;border-color:var(--accent)}
+.menubtns button:hover,.menubtns button:focus-visible{border-color:var(--accent);outline:none}
+.shots button small{font-size:10px;letter-spacing:.06em;opacity:.8}
+@media (max-width:640px){.pausebtn{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 180px);padding:7px 10px}}
+.lvl button{flex:1;font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.1em;text-transform:uppercase;padding:11px 0;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.lvl button:hover,.lvl button:focus-visible{background:var(--accent);color:#1a1405;border-color:var(--accent);outline:none}
+.small{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.45}
+
+.touch{display:none}
+@media (pointer:coarse){
+  .touch{display:block}
+  .meters{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 118px);width:min(300px,calc(100% - 32px));padding:8px 10px}
+  .call{top:calc(env(safe-area-inset-top,0px) + 76px);font-size:17px}
+}
+#stick{position:absolute;left:22px;bottom:calc(env(safe-area-inset-bottom,0px) + 26px);width:132px;height:132px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid var(--line);touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.3)}
+.shots{position:absolute;right:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);display:grid;grid-template-columns:repeat(2,68px);gap:10px}
+.shots button.def{background:rgba(59,143,216,.3);border-color:#6fd0ff}
+.shots button{height:68px;border-radius:50%;border:1px solid var(--line);background:rgba(12,22,31,.7);color:var(--ink);font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.08em;text-transform:uppercase;touch-action:none}
+.shots button.clear{grid-column:1 / span 2;justify-self:center;width:84px;height:84px;background:rgba(242,194,48,.25);border-color:var(--accent)}
+@media (prefers-reduced-motion:reduce){#msg,.call,.powrow,.meters{transition:none}}
+/* highlight replay */
+#replay{position:absolute;inset:0;z-index:30;cursor:pointer;pointer-events:auto}
+#replay::before,#replay::after{content:"";position:absolute;left:0;right:0;height:9vh;background:#000;transition:transform .35s ease}
+#replay::before{top:0} #replay::after{bottom:0}
+#replay .rbadge{position:absolute;top:calc(9vh + 18px);left:24px;display:flex;align-items:stretch;font-family:var(--display);font-weight:800;text-transform:uppercase;letter-spacing:.1em;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+#replay .rbadge b{background:var(--bad);color:#fff;padding:6px 12px;font-size:20px;display:flex;align-items:center;gap:8px}
+#replay .rbadge b::before{content:"";width:0;height:0;border-left:11px solid #fff;border-top:7px solid transparent;border-bottom:7px solid transparent}
+#replay .rbadge span{background:rgba(5,8,12,.86);color:var(--ink);padding:6px 14px;font-size:18px;display:flex;align-items:center}
+#replay .rskip{position:absolute;bottom:calc(9vh + 18px);right:24px;font-size:14px;color:var(--ink);background:rgba(5,8,12,.75);border:1px solid var(--line);border-radius:6px;padding:7px 12px}
+#replay .rskip kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-radius:4px;padding:1px 6px;margin:0 2px}
+#replay .rprog{position:absolute;left:0;right:0;bottom:9vh;height:3px;background:rgba(255,255,255,.12)}
+#replay .rprog i{display:block;height:100%;width:0;background:var(--accent)}
+#replay .rslow{position:absolute;top:calc(9vh + 18px);right:24px;font-family:var(--display);font-weight:700;letter-spacing:.14em;color:var(--accent);font-size:16px;opacity:0;transition:opacity .2s}
+#replay.slow .rslow{opacity:1}
+body.replaying .bug,body.replaying .meters,body.replaying .hint,body.replaying #msg,body.replaying .call,body.replaying .touch,body.replaying .pausebtn{visibility:hidden}
+@media (max-width:640px){#replay .rbadge b{font-size:16px}#replay .rbadge span{font-size:14px}}
+</style>
+
+<div id="app">
+  <canvas id="c" tabindex="0" aria-label="Badminton court"></canvas>
+
+  <div class="bug" id="bug" aria-live="polite">
+    <div class="bug-logo" aria-hidden="true"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="none" stroke="#f2c230" stroke-width="2"/><path d="M15 12 L22 27 L29 12 Z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M18.5 12 L22 27 M25.5 12 L22 27" stroke="#fff" stroke-width="1.2"/><circle cx="22" cy="30" r="4" fill="#f2c230"/></svg></div>
+    <div class="bug-body">
+      <div class="bug-head"><span>Backcourt Open<span class="ev-long"> · Singles</span></span><span><span id="gameLbl">Game 1</span> · <b id="gamesLbl">0–0</b></span></div>
+      <div class="bug-row you"><span class="srv" id="srvP"></span><span class="flag"></span><span class="nm">You</span><span class="gs" id="gsP"></span><span class="pts" id="ptsP">0</span><i class="st"><i id="sbP"></i></i></div>
+      <div class="bug-row cpu"><span class="srv" id="srvA"></span><span class="flag"></span><span class="nm">CPU</span><span class="gs" id="gsA"></span><span class="pts" id="ptsA">0</span><i class="st"><i id="sbA"></i></i></div>
+    </div>
+    <div class="bug-tag" id="bugTag"></div>
+  </div>
+
+  <div class="call" id="call"></div>
+  <div id="msg"><div class="big" id="msgBig"></div><div class="sub" id="msgSub"></div></div>
+
+  <div class="meters" id="meters">
+    <div class="mrow"><span class="mlabel">Stamina</span><div class="bar" title="Hatched end: stamina you've lost for this match"><i id="stamFill"></i><em class="cap" id="capP"></em></div><span class="mnum" id="stamNum">100</span></div>
+    <div class="mrow aimrow"><span class="mlabel">Aim</span><span class="aimtxt" id="aimTxt">Straight</span><span class="mnum"></span></div>
+    <div class="mrow powrow" id="powRow"><span class="mlabel" id="powLabel">Power</span><div class="bar"><i id="powFill"></i><s class="band" id="netBand"></s><b></b></div><span class="mnum" id="powNum">0</span></div>
+  </div>
+
+  <div class="hint">
+    <span><kbd>WASD</kbd>move</span>
+    <span><kbd>Space</kbd>clear · lift · defensive lift</span>
+    <span><kbd>K</kbd>drop · net shot · block · <kbd>L</kbd>smash</span>
+    <span><kbd>←</kbd><kbd>→</kbd> or <kbd>Q</kbd><kbd>E</kbd> aim · <kbd>Esc</kbd> pause</span>
+    <span>Choose your shot when the ball turns gold for a Perfect. The white cross shows where it's going.</span>
+  </div>
+
+  <div class="touch">
+    <div id="stick"><div id="knob"></div></div>
+    <div class="shots">
+      <button class="clear" data-shot="clear">Clear<br><small>/ lift</small></button>
+      <button data-shot="drop">Drop</button>
+      <button data-shot="smash">Smash</button>
+    </div>
+  </div>
+
+  <div id="replay" hidden><div class="rbadge"><b>Replay</b><span id="rpReason"></span></div><div class="rslow">SLOW MOTION</div><div class="rprog"><i id="rpProg"></i></div><div class="rskip">Skip: press any key or tap</div></div>
+
+  <button class="pausebtn" id="pauseBtn" type="button" aria-label="Pause">Pause</button>
+  <div class="overlay" id="pause" hidden>
+    <div class="card">
+      <div class="eyebrow" id="pauseInfo">Paused</div>
+      <h1>Paused</h1>
+      <div class="menubtns">
+        <button id="resumeBtn" class="primary" type="button">Resume</button>
+        <button id="restartBtn" type="button">Restart match</button>
+        <button id="quitBtn" type="button">Change mode or difficulty</button>
+        <button id="voiceBtn" type="button">Umpire voice: On</button>
+        <button id="hlBtn" type="button">Highlight replays: On</button>
+      </div>
+      <div class="small">Esc or P pauses and resumes.</div>
+    </div>
+  </div>
+  <div class="overlay" id="menu">
+    <div class="card">
+      <div class="eyebrow">Singles badminton</div>
+      <h1 id="menuTitle">Backcourt Rally</h1>
+      <p id="menuText">You play from behind your own shoulder. When the CPU hits, a dashed arc shows the shuttle's path and a ring marks where it lands (red means it's going out, so leave it). The blue ring is where to stand, and the blue ball is where you'll make contact. Pick a shot any time. Your player swings on their own when the shuttle arrives, as long as you're in position.</p>
+      <dl class="ctrl">
+        <dt><kbd>W A S D</kbd></dt><dd>Move. Sprinting drains stamina.</dd>
+        <dt><kbd>Space</kbd></dt><dd>All high shots: clears from the back, lifts from the front, defensive lifts against smashes (also the high serve). Hold longer for more power: higher power is deeper and flatter.</dd>
+        <dt><kbd>K</kbd></dt><dd>All soft shots: drops from the back, net shots at the front, and blocks against smashes (also the short serve). At the net the green band on the meter is the sweet spot: a quick tap underhits into the tape, holding too long floats it up to be killed.</dd>
+        <dt><kbd>L</kbd></dt><dd>Smash. Jump smash on high contact if you have stamina.</dd>
+        <dt>Aim</dt><dd><kbd>←</kbd> <kbd>→</kbd> (or <kbd>Q</kbd> <kbd>E</kbd>) pick the left or right line. Opposite your contact side means cross-court. A tap is remembered until your shot goes. The white cross shows the target.</dd>
+        <dt>Timing</dt><dd>Choose your shot while the blue contact ball glows gold for a Perfect: smashes have the widest window, net shots and blocks the tightest. Picking too early is less accurate.</dd>
+        <dt>Power</dt><dd>Hold longer for more power (and depth), release to lock it. Past the red line shots can go long.</dd>
+        <dt>Stamina</dt><dd>Running and smashing wear you down and only a little comes back between rallies. Tired players move slower and hit less accurately.</dd>
+        <dt>Pause</dt><dd><kbd>Esc</kbd> or <kbd>P</kbd> to pause, restart or change mode.</dd>
+      </dl>
+      <div class="modes" role="group" aria-label="Match length">
+        <button type="button" data-mode="bo3" aria-pressed="true">Best of 3</button>
+        <button type="button" data-mode="one" aria-pressed="false">One game</button>
+        <button type="button" data-mode="quick" aria-pressed="false">Quick · to 11</button>
+      </div>
+      <div class="lvl">
+        <button id="lvlEasy" data-lvl="easy">Easy</button>
+        <button id="lvlNormal" data-lvl="normal">Normal</button>
+        <button id="lvlHard" data-lvl="hard">Hard</button>
+      </div>
+      <div class="small">Mouse works too: left button works like Space, right button drops. Serves must land in the diagonal box. The umpire sits on the high chair and the service judge sits on the low chair opposite.</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const smooth = t => t * t * (3 - 2 * t);
+const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+const V3 = THREE.Vector3;
+
+/* ================= court & physics constants ================= */
+const HALF_L = 6.7, SW = 2.59, DW = 3.05, SHORT = 1.98, LONG_D = 5.94, NET_H = 1.524;
+const DT = 1 / 120, DT_S = 1 / 240;
+const G = 9.81, VT = 6.8, KD = G / (VT * VT);          // shuttle terminal velocity ~6.8 m/s
+const UA = 0.29, FA = 0.27, ARM = UA + FA, RK = 0.55;  // upper arm, forearm, racket head distance from hand
+const THIGH = 0.45, SHIN = 0.43;
+
+function stepPhys(p, v, dt) {
+  const s = Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z), k = KD * s;
+  v.x -= k * v.x * dt; v.y -= (G + k * v.y) * dt; v.z -= k * v.z * dt;
+  p.x += v.x * dt; p.y += v.y * dt; p.z += v.z * dt;
+}
+function simFlight(p0, v0) {
+  const p = { x: p0.x, y: p0.y, z: p0.z }, v = { x: v0.x, y: v0.y, z: v0.z };
+  let t = 0, netY = null;
+  while (p.y > 0 && t < 6) {
+    const pz = p.z, py = p.y; stepPhys(p, v, DT_S); t += DT_S;
+    if (netY === null && pz * p.z < 0) netY = py + (p.y - py) * (pz / (pz - p.z));
+  }
+  return { p, t, netY };
+}
+function solveSpeed(from, tx, tz, ang) {
+  const dx = tx - from.x, dz = tz - from.z, dist = Math.hypot(dx, dz) || 0.01, ux = dx / dist, uz = dz / dist;
+  const ca = Math.cos(ang), sa = Math.sin(ang);
+  let lo = 0.5, hi = 130, res = null;
+  for (let i = 0; i < 22; i++) {
+    const s = (lo + hi) / 2, v = { x: ca * ux * s, y: sa * s, z: ca * uz * s }, f = simFlight(from, v);
+    res = { v, s, netY: f.netY };
+    if (Math.hypot(f.p.x - from.x, f.p.z - from.z) < dist) lo = s; else hi = s;
+  }
+  return res;
+}
+function solveAngle(from, tx, tz, s) {
+  const dx = tx - from.x, dz = tz - from.z, dist = Math.hypot(dx, dz) || 0.01, ux = dx / dist, uz = dz / dist;
+  let lo = -0.85, hi = 0.45, res = null;
+  const mk = a => ({ x: Math.cos(a) * ux * s, y: Math.sin(a) * s, z: Math.cos(a) * uz * s });
+  for (let i = 0; i < 20; i++) {
+    const a = (lo + hi) / 2, v = mk(a), f = simFlight(from, v);
+    res = { v, netY: f.netY };
+    if (Math.hypot(f.p.x - from.x, f.p.z - from.z) < dist) lo = a; else hi = a;
+  }
+  return res;
+}
+const DEG = Math.PI / 180;
+// clears and lifts aim for a realistic peak height: ~7.5 m for a soft defensive clear down to ~4.8 m for a
+// full-power attacking clear (lifts from the net a little lower); always clearing the net with room to spare
+function apexOf(from, v) { const p = { ...from }, w = { ...v }; let m = p.y; for (let i = 0; i < 1500 && p.y > 0; i++) { stepPhys(p, w, DT_S); if (p.y > m) m = p.y; else if (w.y < 0) break; } return m; }
+function bestLob(from, tx, tz, minNet, power = 0.7) {
+  const k = clamp((power - 0.4) / 0.6, 0, 1), front = Math.abs(from.z) < 3;
+  const want = front ? lerp(6.4, 4.6, k) : lerp(7.5, 4.8, k);
+  let best = null, bd = 1e9;
+  for (let a = 18; a <= 72; a += 3) {
+    const r = solveSpeed(from, tx, tz, a * DEG);
+    if (r.netY !== null && r.netY < minNet) continue;
+    const d = Math.abs(apexOf(from, r.v) - want);
+    if (d < bd) { bd = d; best = r; }
+  }
+  return (best || solveSpeed(from, tx, tz, 50 * DEG)).v;
+}
+function bestSoft(from, tx, tz, maxS, minNet) {
+  let best = null, bestY = 1e9, fall = null, fallY = -1e9;
+  for (let a = -20; a <= 70; a += 5) {
+    const r = solveSpeed(from, tx, tz, a * DEG);
+    const ny = r.netY === null ? 9 : r.netY;
+    if (ny > fallY && r.s <= maxS * 1.6) { fallY = ny; fall = r; }
+    if (r.s <= maxS && ny >= minNet && ny < bestY) { bestY = ny; best = r; }
+  }
+  return (best || fall || solveSpeed(from, tx, tz, 45 * DEG)).v;
+}
+// net shot / short serve: the trajectory whose net crossing height is nearest the wanted height (too low clips the tape, too high floats up to be killed)
+function bestNet(from, tx, tz, wantY, maxS) {
+  const at = a => { const r = solveSpeed(from, tx, tz, a * DEG); r.a = a; r.f = r.netY === null ? -9 : r.netY - wantY; return r; };
+  let best = null, bd = 1e9, prev = null, br = null;
+  for (let a = -15; a <= 78; a += 3) {
+    const r = at(a);
+    if (r.s <= maxS && r.netY !== null && Math.abs(r.f) < bd) { bd = Math.abs(r.f); best = r; }
+    if (!br && prev && prev.f < 0 && r.f >= 0 && r.s <= maxS * 1.15) br = [prev, r];
+    prev = r;
+  }
+  if (br) { // refine the angle so the shuttle crosses the net at exactly the wanted height
+    let [lo, hi] = br;
+    for (let i = 0; i < 14; i++) { const m = at((lo.a + hi.a) / 2); if (m.f < 0) lo = m; else hi = m; }
+    return hi.v;
+  }
+  // target too tight to the net for this contact: land it a little deeper instead
+  if (Math.abs(tz) < 2.2 && !(best && Math.abs(best.f) < 0.03)) return bestNet(from, tx, tz + Math.sign(tz) * 0.2, wantY, maxS);
+  return (best || solveSpeed(from, tx, tz, 50 * DEG)).v;
+}
+function bestFlat(from, tx, tz, s, margin) {
+  const dir = Math.sign(tz) || 1;
+  let r = null;
+  for (let extra = 0; extra <= 2.6; extra += 0.45) {
+    const z = dir * Math.min(Math.abs(tz) + extra, 6.55);
+    r = solveAngle(from, tx, z, s);
+    if (r.netY === null || r.netY >= NET_H + margin) return r.v;
+  }
+  return r.v;
+}
+
+/* ================= renderer & scene ================= */
+const canvas = $('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+const ANISO = renderer.capabilities.getMaxAnisotropy();
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05070c);
+scene.fog = new THREE.Fog(0x05070c, 40, 95);
+const camera = new THREE.PerspectiveCamera(58, 1, 0.1, 140);
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.fov = w < h ? 74 : 58; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+scene.add(new THREE.HemisphereLight(0xd8e0ff, 0x1a1420, 0.32));
+const sun = new THREE.DirectionalLight(0xfff4e6, 0.88);
+sun.position.set(3, 16, 4); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -8, right: 8, top: 10, bottom: -10, near: 2, far: 40 });
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
+scene.add(sun);
+const fillL = new THREE.DirectionalLight(0xdfe8ff, 0.28); fillL.position.set(-6, 10, -8); scene.add(fillL);
+// show-court spotlight: the court glows, the bowl falls away into darkness
+const courtSpot = new THREE.SpotLight(0xfff6ea, 0.45, 0, 0.62, 0.6, 0); courtSpot.position.set(0, 17, 1); courtSpot.target.position.set(0, 0, 0); scene.add(courtSpot, courtSpot.target);
+
+const M = (color, rough = 0.75, extra = {}) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: rough, metalness: 0 }, extra));
+function canvasTex(w, h, draw, rep) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = ANISO;
+  if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); }
+  return t;
+}
+
+/* floor: arena field of play, coral patterned zones behind each baseline */
+const FLOOR_W = 52, FLOOR_L = 62;
+const floorTex = canvasTex(1024, 1216, (g, w, h) => {
+  const X = x => (x / FLOOR_W + 0.5) * w, Z = z => (z / FLOOR_L + 0.5) * h;
+  g.fillStyle = '#2a1a4e'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 14000; i++) { g.fillStyle = Math.random() < 0.5 ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.025)'; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+  for (const sg of [-1, 1]) {
+    const x0 = X(-8.6), x1 = X(8.6), z0 = Z(sg > 0 ? 10.7 : -13.9), z1 = Z(sg > 0 ? 13.9 : -10.7), d = z1 - z0;
+    g.save(); g.beginPath(); g.rect(x0, z0, x1 - x0, d); g.clip();
+    g.fillStyle = '#d0544b'; g.fillRect(x0, z0, x1 - x0, d);
+    g.strokeStyle = 'rgba(255,220,205,.32)'; g.lineWidth = 2;
+    for (let x = x0 - d; x < x1 + d; x += 0.9 * w / FLOOR_W) { g.beginPath(); g.moveTo(x, z0); g.lineTo(x + d, z1); g.moveTo(x, z1); g.lineTo(x + d, z0); g.stroke(); }
+    g.restore();
+  }
+});
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(FLOOR_W, FLOOR_L), M(0xffffff, 0.6, { map: floorTex }));
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+
+/* court mat with lines baked into one texture (no stacked coplanar strips) */
+const MW = 7.9, ML = 15.8;
+const courtTex = canvasTex(1024, 2048, (g, w, h) => {
+  const s = w / MW;
+  g.fillStyle = '#17793f'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 9000; i++) {
+    g.fillStyle = Math.random() < 0.5 ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.035)';
+    g.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 3, 2 + Math.random() * 3);
+  }
+  const lw = Math.max(4, 0.04 * s);
+  const X = x => (x + MW / 2) * s, Z = z => (z + ML / 2) * s;
+  g.fillStyle = '#eef1ea';
+  const hl = (x1, x2, z) => g.fillRect(X(x1) - lw / 2, Z(z) - lw / 2, X(x2) - X(x1) + lw, lw);
+  const vl = (x, z1, z2) => g.fillRect(X(x) - lw / 2, Z(z1) - lw / 2, lw, Z(z2) - Z(z1) + lw);
+  [DW, SW, -SW, -DW].forEach(x => vl(x, -HALF_L, HALF_L));
+  [1, -1].forEach(sg => { hl(-DW, DW, sg * HALF_L); hl(-DW, DW, sg * LONG_D); hl(-DW, DW, sg * SHORT); });
+  vl(0, SHORT, HALF_L); vl(0, -HALF_L, -SHORT);
+});
+const mat = new THREE.Mesh(new THREE.PlaneGeometry(MW, ML),
+  M(0xffffff, 0.85, { map: courtTex, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+mat.rotation.x = -Math.PI / 2; mat.position.y = 0.002; mat.receiveShadow = true; scene.add(mat);
+
+/* ================= arena ================= */
+const shadowAllLater = [];
+const FONT_C = '"Saira Condensed","Arial Narrow",Arial,sans-serif';
+function abox(parent, w, h, d, mat, x, y, z) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); parent.add(m); return m; }
+// fictional sponsors only, in broadcast-board colours
+const SPONSORS = [['VOLTA', '#ffffff', '#1d4fb8'], ['SKYLINE AIR', '#ffffff', '#d4262b'], ['KESTREL', '#ffffff', '#169447'], ['NOVA TEA', '#0f3a22', '#a6e36b'],
+  ['HELIX SPORTS', '#ffffff', '#1d4fb8'], ['ORBIT BANK', '#ffffff', '#d4262b'], ['BACKCOURT OPEN', '#ffffff', '#1b1f5e'], ['FEATHERLINE', '#ffffff', '#139c93']];
+function fitFont(g, txt, maxW, fs, weight = 800) {
+  const font = () => `${weight} ${fs}px ${FONT_C}`;
+  g.font = font(); while (g.measureText(txt).width > maxW && fs > 10) { fs -= 2; g.font = font(); }
+  return fs;
+}
+function ledTexture(w, h, offset, n = 6) {
+  return canvasTex(w, h, (g) => {
+    const pw = w / n;
+    for (let i = 0; i < n; i++) {
+      const [txt, fg, bg] = SPONSORS[(i + offset) % SPONSORS.length], x0 = i * pw;
+      g.fillStyle = bg; g.fillRect(x0, 0, pw, h);
+      g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(x0, 0, pw, h * 0.42);
+      g.fillStyle = 'rgba(0,0,0,.12)'; for (let y = 0; y < h; y += 4) g.fillRect(x0, y, pw, 1);
+      const em = h * 0.34, gap = h * 0.14;
+      fitFont(g, txt, pw * 0.84 - em - gap, Math.round(h * 0.5));
+      const tw = g.measureText(txt).width, sx = x0 + pw / 2 - (tw + em + gap) / 2, cy = h * 0.5;
+      g.fillStyle = fg;   // simple slanted brand mark
+      g.beginPath(); g.moveTo(sx + em * 0.38, cy - em / 2); g.lineTo(sx + em, cy - em / 2); g.lineTo(sx + em * 0.62, cy + em / 2); g.lineTo(sx, cy + em / 2); g.closePath(); g.fill();
+      g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(txt, sx + em + gap, h * 0.54);
+      g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(x0 + pw - 3, 0, 3, h);
+    }
+  });
+}
+// glowing gradient ribbon boards that ring the bowl
+const RIBBON_GRADS = [['#ff2f92', '#8a2cff'], ['#8a2cff', '#2f6bff'], ['#2f6bff', '#17c4ff'], ['#17c4ff', '#8a2cff'], ['#8a2cff', '#ff2f92']];
+function ribbonTexture(w, h, offset, n) {
+  return canvasTex(w, h, (g) => {
+    const pw = w / n;
+    for (let i = 0; i < n; i++) {
+      const [a, b] = RIBBON_GRADS[(i + offset) % RIBBON_GRADS.length], x0 = i * pw;
+      const gr = g.createLinearGradient(x0, 0, x0 + pw, 0); gr.addColorStop(0, a); gr.addColorStop(1, b);
+      g.fillStyle = gr; g.fillRect(x0, 0, pw, h);
+      const e = Math.max(2, h * 0.06); g.fillStyle = 'rgba(255,255,255,.6)'; g.fillRect(x0, 0, pw, e); g.fillRect(x0, h - e, pw, e);
+      const txt = SPONSORS[(i * 3 + offset) % SPONSORS.length][0];
+      fitFont(g, txt, pw * 0.7, Math.round(h * 0.56));
+      g.fillStyle = '#ffffff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, x0 + pw / 2, h * 0.54);
+    }
+  });
+}
+const ledTextures = [];
+function mkLed(make, rep, spd = 0.02) {
+  const t = make(); t.wrapS = THREE.RepeatWrapping; t.repeat.set(rep, 1);
+  t.userData.make = make; t.userData.spd = spd; ledTextures.push(t); return t;
+}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => {
+  for (const t of ledTextures) { const fresh = t.userData.make(); t.image = fresh.image; t.needsUpdate = true; }
+  drawSpeed(); drawScoreboard(); drawLive();
+});
+const boardBack = M(0x101318, 0.6);
+function screenBoard(tex, len, h, x, y, z, ry, parent = scene) {
+  const g = new THREE.Group();
+  abox(g, len, h, 0.14, boardBack, 0, 0, 0);
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(len - 0.04, h - 0.05), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+  face.position.z = 0.072; g.add(face);
+  g.position.set(x, y, z); g.rotation.y = ry; parent.add(g); return g;
+}
+// perimeter LED boards: leaned back on their frames like the real thing
+function perimBoard(len, x, z, ry, offset, rep) {
+  const g = new THREE.Group(), tilt = new THREE.Group(), H = 0.8;
+  const tex = mkLed(() => ledTexture(2048, 128, offset), rep, 0.018);
+  const back = abox(tilt, len, H, 0.1, boardBack, 0, H / 2, -0.05); back.castShadow = true;
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(len - 0.03, H - 0.05), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+  face.position.set(0, H / 2, 0.002); tilt.add(face);
+  tilt.rotation.x = -0.24; g.add(tilt);
+  abox(g, len, 0.04, 0.42, boardBack, 0, 0.02, -0.2);   // foot of the frame
+  g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g); return g;
+}
+perimBoard(20.6, -7.45, 0, Math.PI / 2, 0, 2.6); perimBoard(20.6, 7.45, 0, -Math.PI / 2, 3, 2.6);
+perimBoard(14.6, 0, -10.6, 0, 1, 1.8); perimBoard(14.6, 0, 10.6, Math.PI, 5, 1.8);
+
+// tournament surround: blue field of play with event branding
+const SUR_W = 15.2, SUR_L = 21.6;
+const surroundTex = canvasTex(1024, 1456, (g, w, h) => {
+  g.fillStyle = '#183f92'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 7000; i++) { g.fillStyle = Math.random() < 0.5 ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.03)'; g.fillRect(Math.random() * w, Math.random() * h, 3, 3); }
+  const X = x => (x / SUR_W + 0.5) * w, Y = z => (z / SUR_L + 0.5) * h;
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  const logo = (y) => {
+    g.fillStyle = 'rgba(255,255,255,.92)'; g.font = `800 66px ${FONT_C}`; g.fillText('BACKCOURT OPEN', w / 2, y - 8);
+    g.fillStyle = 'rgba(255,255,255,.6)'; g.font = `700 26px ${FONT_C}`; g.fillText('WORLD TOUR SUPER 1000 · 2026', w / 2, y + 36);
+  };
+  logo(Y(-9.3)); logo(Y(9.3));
+  g.font = `800 38px ${FONT_C}`;
+  for (const [x, rot, txt] of [[-5.7, -Math.PI / 2, 'FEATHERLINE WORLD TOUR'], [5.7, Math.PI / 2, 'HARBOR CITY']]) for (const z of [-4.2, 4.2]) {
+    g.save(); g.translate(X(x), Y(z)); g.rotate(rot); g.fillStyle = 'rgba(255,255,255,.55)'; g.fillText(txt, 0, 0); g.restore();
+  }
+});
+const surround = new THREE.Mesh(new THREE.PlaneGeometry(SUR_W, SUR_L), M(0xffffff, 0.8, { map: surroundTex, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
+surround.rotation.x = -Math.PI / 2; surround.position.y = 0.001; surround.receiveShadow = true; scene.add(surround);
+
+// broadcast backdrop behind each baseline: two tiers of LED boards on a dark wall
+for (const sg of [-1, 1]) {
+  const z = sg * 14.0, ry = sg > 0 ? Math.PI : 0;
+  abox(scene, 17.2, 3.3, 0.3, M(0x0c0f14, 0.8), 0, 1.65, z + sg * 0.15);
+  screenBoard(mkLed(() => ledTexture(2048, 128, sg > 0 ? 2 : 6), 1.5, 0.015), 16.6, 1.0, 0, 0.62, sg * 13.78, ry);
+  screenBoard(mkLed(() => ledTexture(2048, 160, sg > 0 ? 4 : 0, 4), 1, 0), 16.6, 1.6, 0, 2.3, sg * 13.78, ry);
+}
+
+// hall shell
+const ROWS = 14, ROW_D = 0.85, ROW_H = 0.42, FASCIA = 1.05, SIDE0 = 11.2, END0 = 15.6;
+const HALL_X = 24.2, HALL_Z = 28.6, HALL_H = 17.5;
+const wallMat = M(0x0a0d13, 0.95);
+[[0, -HALL_Z, 0, HALL_X * 2], [0, HALL_Z, Math.PI, HALL_X * 2], [-HALL_X, 0, Math.PI / 2, HALL_Z * 2], [HALL_X, 0, -Math.PI / 2, HALL_Z * 2]].forEach(([x, z, ry, w]) => {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, HALL_H), wallMat); m.position.set(x, HALL_H / 2, z); m.rotation.y = ry; scene.add(m);
+});
+const ceil = new THREE.Mesh(new THREE.PlaneGeometry(HALL_X * 2, HALL_Z * 2), M(0x06080c, 1)); ceil.rotation.x = Math.PI / 2; ceil.position.y = HALL_H; scene.add(ceil);
+
+// rows of small ceiling lights hung on catwalk strings
+const arenaGlowTex = canvasTex(64, 64, (g) => {
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.22, 'rgba(255,244,222,.9)'); gr.addColorStop(0.5, 'rgba(255,226,190,.22)'); gr.addColorStop(1, 'rgba(255,220,180,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+});
+function glowPoints(pts, size, color) {
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  const p = new THREE.Points(geo, new THREE.PointsMaterial({ map: arenaGlowTex, size, color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+  scene.add(p); return p;
+}
+{
+  const pts = [], beamM = M(0x14181f, 0.7);
+  for (let z = -HALL_Z + 1.6; z < HALL_Z - 1; z += 2.4) {
+    for (let x = -HALL_X + 1; x < HALL_X - 0.6; x += 1.05) pts.push(x + (Math.random() - 0.5) * 0.12, HALL_H - 0.85, z);
+  }
+  glowPoints(pts, 0.6, 0xfff0d8);
+  const zs = []; for (let z = -HALL_Z + 1.6; z < HALL_Z - 1; z += 2.4) zs.push(z);
+  const im = new THREE.InstancedMesh(new THREE.BoxGeometry(HALL_X * 2 - 1, 0.07, 0.07), beamM, zs.length);
+  zs.forEach((z, i) => im.setMatrixAt(i, new THREE.Matrix4().makeTranslation(0, HALL_H - 0.75, z))); scene.add(im);
+}
+// lighting truss over the court with floodlight banks
+const trussMat = M(0x262b33, 0.5, { metalness: 0.5 }), lampMat = new THREE.MeshBasicMaterial({ color: 0xfff8e8 });
+for (const x of [-5.5, 0, 5.5]) abox(scene, 0.35, 0.35, 30, trussMat, x, 13.5, 0);
+for (const z of [-12, -6, 0, 6, 12]) abox(scene, 12, 0.25, 0.25, trussMat, 0, 13.6, z);
+{
+  const pts = [];
+  const im = new THREE.InstancedMesh(new THREE.BoxGeometry(0.9, 0.16, 0.5), lampMat, 39); let n = 0;
+  for (let i = -6; i <= 6; i++) for (const x of [-5.5, 0, 5.5]) { im.setMatrixAt(n++, new THREE.Matrix4().makeTranslation(x, 13.25, i * 2.2)); pts.push(x - 0.22, 13.12, i * 2.2, x + 0.22, 13.12, i * 2.2); }
+  scene.add(im);
+  glowPoints(pts, 1.5, 0xfff4e4);
+}
+
+// stands: one continuous stepped bowl, lower tier, LED ribbon fascia, upper tier
+const rowTop = r => 0.55 + r * ROW_H + (r >= 7 ? FASCIA : 0);
+const concrete = M(0x090a0e, 0.95), seatCols = [0x14121e, 0x181524];
+const seatSlots = [];
+const stripM = new THREE.MeshBasicMaterial({ color: 0xb04dff, toneMapped: false });
+function standSide(dir, axis) {   // axis 'x': long sides; 'z': ends
+  const across = axis === 'x' ? END0 : SIDE0;
+  for (let r = 0; r < ROWS; r++) {
+    const top = rowTop(r), d0 = (axis === 'x' ? SIDE0 : END0) + r * ROW_D;
+    const half = across + (r + 1) * ROW_D, L = half * 2;   // rows reach round the corners so the bowl is closed
+    const m = new THREE.Mesh(new THREE.BoxGeometry(axis === 'x' ? ROW_D : L, top, axis === 'x' ? L : ROW_D), concrete);
+    if (axis === 'x') m.position.set(dir * (d0 + ROW_D / 2), top / 2, 0); else m.position.set(0, top / 2, dir * (d0 + ROW_D / 2));
+    m.receiveShadow = true; scene.add(m);
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(axis === 'x' ? 0.42 : L, 0.12, axis === 'x' ? L : 0.42), M(seatCols[r % 2], 0.7));
+    if (axis === 'x') seat.position.set(dir * (d0 + ROW_D * 0.62), top + 0.06, 0); else seat.position.set(0, top + 0.06, dir * (d0 + ROW_D * 0.62));
+    scene.add(seat);
+    const slotHalf = axis === 'x' ? half : half - ROW_D;   // the corner squares belong to the side rows
+    for (let u = -slotHalf + 0.32; u < slotHalf - 0.26; u += 0.56) {
+      if (Math.random() < 0.09) continue;
+      const p = axis === 'x' ? { x: dir * (d0 + ROW_D * 0.6), z: u } : { x: u, z: dir * (d0 + ROW_D * 0.6) };
+      seatSlots.push({ x: p.x, y: top + 0.12, z: p.z });
+    }
+    if (r === 0) {   // glowing strip along the front wall
+      const s = new THREE.Mesh(new THREE.PlaneGeometry(across * 2, 0.07), stripM);
+      if (axis === 'x') { s.position.set(dir * (d0 - 0.005), top - 0.06, 0); s.rotation.y = dir > 0 ? -Math.PI / 2 : Math.PI / 2; }
+      else { s.position.set(0, top - 0.06, dir * (d0 - 0.005)); s.rotation.y = dir > 0 ? Math.PI : 0; }
+      scene.add(s);
+    }
+    if (r === 7) {   // ribbon board between the tiers
+      const len = (across + 7 * ROW_D) * 2, y = rowTop(6) + FASCIA / 2 + 0.02, o = (axis === 'x' ? 0 : 2) + (dir > 0 ? 1 : 0);
+      const tex = mkLed(() => ribbonTexture(2048, 96, o, 6), len / 9, 0.03);
+      if (axis === 'x') screenBoard(tex, len, FASCIA - 0.1, dir * (d0 - 0.08), y, 0, dir > 0 ? -Math.PI / 2 : Math.PI / 2);
+      else screenBoard(tex, len, FASCIA - 0.1, 0, y, dir * (d0 - 0.08), dir > 0 ? Math.PI : 0);
+    }
+  }
+}
+standSide(-1, 'x'); standSide(1, 'x'); standSide(-1, 'z'); standSide(1, 'z');
+
+// upper ring on the hall walls: ribbon boards and a band of lit hospitality suites
+const suiteTex = canvasTex(2048, 128, (g, w, h) => {
+  g.fillStyle = '#07090d'; g.fillRect(0, 0, w, h);
+  for (let x = 6; x < w - 60; x += 64) {
+    const lit = Math.random() < 0.82, warm = 52 + Math.random() * 18;
+    g.fillStyle = lit ? `hsl(${32 + Math.random() * 10},${warm}%,${44 + Math.random() * 22}%)` : '#151a22';
+    g.fillRect(x, 22, 58, 78);
+    g.fillStyle = 'rgba(0,0,0,.35)'; for (let k = 1; k < 3; k++) g.fillRect(x + k * 19, 22, 2, 78);
+    if (lit) { g.fillStyle = 'rgba(0,0,0,.55)'; for (let k = 0; k < 3; k++) if (Math.random() < 0.6) g.fillRect(x + 6 + Math.random() * 40, 60 + Math.random() * 10, 8, 40); }
+  }
+  g.fillStyle = '#2a2f38'; g.fillRect(0, 104, w, 6);
+});
+suiteTex.wrapS = THREE.RepeatWrapping;
+for (const [x, z, ry, len] of [[0, -HALL_Z + 0.06, 0, HALL_X * 2], [0, HALL_Z - 0.06, Math.PI, HALL_X * 2], [-HALL_X + 0.06, 0, Math.PI / 2, HALL_Z * 2], [HALL_X - 0.06, 0, -Math.PI / 2, HALL_Z * 2]]) {
+  const t = suiteTex.clone(); t.needsUpdate = true; t.repeat.set(len / 26, 1);
+  const s = new THREE.Mesh(new THREE.PlaneGeometry(len, 1.7), new THREE.MeshBasicMaterial({ map: t, toneMapped: false, color: 0x7a746a }));
+  s.position.set(x, 9.4, z); s.rotation.y = ry; scene.add(s);
+  const sgx = Math.sign(-x) || 0, sgz = Math.sign(-z) || 0;
+  screenBoard(mkLed(() => ribbonTexture(2048, 80, 1 + (len | 0) % 3, 6), len / 10, 0.025), len, 0.6, x + sgx * 0.1, 7.75, z + sgz * 0.1, ry);
+  screenBoard(mkLed(() => ribbonTexture(2048, 64, 3, 6), len / 10, -0.02), len, 0.42, x + sgx * 0.1, 11.0, z + sgz * 0.1, ry);
+}
+
+// crowd: instanced seated spectators, team colours mixed in
+const crowdN = seatSlots.length;
+const shirtCols = [0xd9412b, 0xd9412b, 0x2f7fd6, 0x2f7fd6, 0xf4f4f0, 0x1c1f24, 0x1c1f24, 0x2a2e36, 0xf2c230, 0x3f9b5a, 0x8a8f96, 0x6a3fa0, 0xe07a2e, 0x1c1f24];
+const skinCols = [0xf1c8a5, 0xd9a47e, 0xb77a50, 0x8d5a3a, 0x5e3b26, 0xe8b894];
+const bodyIM = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.165, 0.38, 3, 8), new THREE.MeshLambertMaterial({ color: 0x383838 }), crowdN);
+const headIM = new THREE.InstancedMesh(new THREE.SphereGeometry(0.105, 10, 8), new THREE.MeshLambertMaterial({ color: 0x424242 }), crowdN);
+const crowdPhase = new Float32Array(crowdN), crowdFan = new Int8Array(crowdN);
+const _cm = new THREE.Matrix4(), _cc = new THREE.Color();
+function placeFan(i, lift) {
+  const p = seatSlots[i];
+  _cm.makeTranslation(p.x, p.y + 0.38 + lift, p.z); bodyIM.setMatrixAt(i, _cm);
+  _cm.makeTranslation(p.x, p.y + 0.8 + lift * 1.1, p.z); headIM.setMatrixAt(i, _cm);
+}
+for (let i = 0; i < crowdN; i++) {
+  const c = shirtCols[(Math.random() * shirtCols.length) | 0];
+  bodyIM.setColorAt(i, _cc.setHex(c)); headIM.setColorAt(i, _cc.setHex(skinCols[(Math.random() * skinCols.length) | 0]));
+  crowdPhase[i] = Math.random() * Math.PI * 2; crowdFan[i] = c === 0xd9412b ? 1 : c === 0x2f7fd6 ? -1 : 0;
+  placeFan(i, 0);
+}
+scene.add(bodyIM); scene.add(headIM);
+// a few flags and banners waved in the crowd
+const flags = [];
+for (let k = 0; k < 52; k++) {
+  const i = (Math.random() * crowdN) | 0, p = seatSlots[i];
+  const col = [0xd9412b, 0x2f7fd6, 0xf2c230, 0xffffff][k % 4];
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.42), new THREE.MeshLambertMaterial({ color: new THREE.Color(col).multiplyScalar(0.42), side: THREE.DoubleSide }));
+  f.position.set(p.x, p.y + 1.45, p.z); f.lookAt(0, p.y + 1.45, 0); scene.add(f); flags.push({ m: f, ph: Math.random() * 6, y: p.y + 1.45 });
+}
+let cheerT = 0, cheerSide = 0;
+function crowdCheer(side, big) { cheerT = 1.8; cheerSide = side === 'P' ? 1 : -1; crowdRoar(side, big); }
+
+const sbCanvas = document.createElement('canvas'); sbCanvas.width = 512; sbCanvas.height = 256;
+const sbTex = new THREE.CanvasTexture(sbCanvas); sbTex.encoding = THREE.sRGBEncoding; sbTex.anisotropy = ANISO;
+// live broadcast feed: a TV camera renders into the big video screens
+const tvRT = new THREE.WebGLRenderTarget(640, 360, { encoding: THREE.sRGBEncoding });
+const tvCam = new THREE.PerspectiveCamera(34, 16 / 9, 0.5, 90);
+tvCam.position.set(0, 8.6, 19.5);
+const tvLook = new THREE.Vector3(0, 0, -1.5), tvScreens = [];
+const liveCanvas = document.createElement('canvas'); liveCanvas.width = 256; liveCanvas.height = 64;
+const liveTex = new THREE.CanvasTexture(liveCanvas); liveTex.encoding = THREE.sRGBEncoding;
+function drawLive() {
+  const g = liveCanvas.getContext('2d');
+  g.clearRect(0, 0, 256, 64); g.fillStyle = '#d4262b'; g.fillRect(0, 8, 92, 48); g.fillStyle = 'rgba(5,8,12,.85)'; g.fillRect(92, 8, 164, 48);
+  g.fillStyle = '#fff'; g.textBaseline = 'middle'; g.textAlign = 'center'; g.font = `800 30px ${FONT_C}`; g.fillText('LIVE', 46, 33);
+  g.font = `700 24px ${FONT_C}`; g.fillText('CENTRE COURT', 174, 33); liveTex.needsUpdate = true;
+}
+drawLive();
+// centre-hung four-sided scoreboard and two end-wall video screens
+(() => {
+  const g = new THREE.Group(), dk = M(0x0b0e13, 0.5, { metalness: 0.3 });
+  abox(g, 4.5, 2.5, 4.5, dk, 0, 0, 0);
+  for (let k = 0; k < 4; k++) {
+    const f = new THREE.Group(); f.rotation.y = k * Math.PI / 2; g.add(f);
+    const s = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 2.1), new THREE.MeshBasicMaterial({ map: sbTex, toneMapped: false })); s.position.set(0, 0.05, 2.26); f.add(s);
+    const rt = mkLed(() => ribbonTexture(1024, 64, k, 3), 1, 0.03);
+    const rb = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 0.32), new THREE.MeshBasicMaterial({ map: rt, toneMapped: false })); rb.position.set(0, -1.45, 2.0); f.add(rb);
+  }
+  abox(g, 4.1, 0.34, 4.1, dk, 0, -1.45, 0);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const c = abox(g, 0.03, 5.2, 0.03, dk, sx * 1.8, 3.85, sz * 1.8); }
+  g.position.set(0, 11.2, 0); scene.add(g);
+  for (const sg of [-1, 1]) {
+    const e = new THREE.Group();
+    abox(e, 11.6, 6.7, 0.3, dk, 0, 0, -0.15);
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(11.2, 6.3), new THREE.MeshBasicMaterial({ map: tvRT.texture, toneMapped: false, color: 0xe6e6e6 }));
+    scr.position.z = 0.01; e.add(scr); tvScreens.push(scr);
+    const bug = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.3), new THREE.MeshBasicMaterial({ map: sbTex, toneMapped: false, transparent: true, opacity: 0.94 }));
+    bug.position.set(-3.95, 2.35, 0.03); e.add(bug);
+    const live = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 0.5), new THREE.MeshBasicMaterial({ map: liveTex, toneMapped: false, transparent: true }));
+    live.position.set(4.35, 2.65, 0.03); e.add(live);
+    e.position.set(0, 11.6, sg * (HALL_Z - 0.4)); e.rotation.y = sg > 0 ? Math.PI : 0; scene.add(e);
+  }
+})();
+let tvTick = 0;
+function renderTV() {
+  if ((++tvTick) % 3) return;
+  const sp = shuttle.p;
+  if (sp) { tvLook.x += (sp.x * 0.3 - tvLook.x) * 0.1; tvLook.z += (sp.z * 0.22 - 1.5 - tvLook.z) * 0.1; }
+  tvCam.lookAt(tvLook);
+  for (const m of tvScreens) m.visible = false;
+  const au = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false;
+  renderer.setRenderTarget(tvRT); renderer.render(scene, tvCam); renderer.setRenderTarget(null);
+  renderer.shadowMap.autoUpdate = au;
+  for (const m of tvScreens) m.visible = true;
+}
+
+function updateArena(dt) {
+  for (const t of ledTextures) t.offset.x = (t.offset.x + dt * t.userData.spd + 1) % 1;
+  for (const f of flags) { f.m.position.y = f.y + Math.sin(game.t * 3 + f.ph) * 0.06; f.m.rotation.z = Math.sin(game.t * 2.4 + f.ph) * 0.25; }
+  if (cheerT > 0) {
+    cheerT -= dt;
+    const k = Math.max(0, Math.min(1, cheerT / 0.4));
+    for (let i = 0; i < crowdN; i++) {
+      const keen = crowdFan[i] === cheerSide ? 1 : crowdFan[i] === 0 ? 0.45 : 0.1;
+      placeFan(i, k * keen * Math.max(0, Math.sin(game.t * 9 + crowdPhase[i])) * 0.22);
+    }
+    bodyIM.instanceMatrix.needsUpdate = true; headIM.instanceMatrix.needsUpdate = true;
+  }
+  renderTV();
+}
+
+// players' equipment baskets beside the umpire's chair, one per side of the net
+function gearBasket(z, col, rot) {
+  const g = new THREE.Group(), frameM = M(0x2a2f36, 0.5, { metalness: 0.3 }), slat = M(0x3a434e, 0.7);
+  const W = 0.8, D = 0.48, H = 0.5;
+  const base = new THREE.Mesh(new THREE.BoxGeometry(W, 0.04, D), frameM); base.position.y = 0.04; g.add(base);
+  for (const sz of [-1, 1]) for (let k = 0; k < 3; k++) { const b = new THREE.Mesh(new THREE.BoxGeometry(W, 0.06, 0.02), slat); b.position.set(0, 0.14 + k * 0.15, sz * D / 2); g.add(b); }
+  for (const sx of [-1, 1]) for (let k = 0; k < 3; k++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.06, D), slat); b.position.set(sx * W / 2, 0.14 + k * 0.15, 0); g.add(b); }
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.03, H, 0.03), frameM); p.position.set(sx * W / 2, H / 2, sz * D / 2); g.add(p); }
+  // racket bag, towel, bottles, spare racket heads
+  const bag = new THREE.Mesh(new THREE.CapsuleGeometry(0.12, 0.5, 4, 10), M(col, 0.6)); bag.rotation.z = Math.PI / 2; bag.scale.set(1, 1, 0.8); bag.position.set(0, 0.3, -0.06); g.add(bag);
+  const strap = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.025, 0.05), M(0x111111, 0.6)); strap.position.set(0, 0.42, -0.06); g.add(strap);
+  const towel = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.06, 0.22), M(0xf6f6f2, 0.95)); towel.position.set(-0.12, 0.47, 0.1); towel.rotation.y = 0.2; g.add(towel);
+  for (const bx of [0.2, 0.3]) { const bt = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.22, 10), M(bx > 0.25 ? 0x9ee07a : 0xd8f0ff, 0.2, { transparent: true, opacity: 0.85 })); bt.position.set(bx, 0.49, 0.12); g.add(bt); }
+  for (const rx of [-0.25, -0.18]) {
+    const h = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.006, 6, 24), M(0x1d1d1d, 0.35)); h.scale.set(1, 1.26, 1); h.position.set(rx, 0.62, -0.12); h.rotation.y = Math.PI / 2; h.rotation.z = 0.2; g.add(h);
+  }
+  g.position.set(4.55, 0, z); g.rotation.y = rot; g.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(g);
+}
+gearBasket(1.35, 0xc3302a, Math.PI / 2 + 0.06);
+gearBasket(-1.35, 0x2563b5, Math.PI / 2 - 0.05);
+
+// smash speed display + radar gun behind the far baseline
+const speedCanvas = document.createElement('canvas'); speedCanvas.width = 512; speedCanvas.height = 200;
+const speedTex = new THREE.CanvasTexture(speedCanvas); speedTex.encoding = THREE.sRGBEncoding; speedTex.anisotropy = ANISO;
+const smashRec = { last: 0, who: '', best: 0, bestWho: '' };
+function drawSpeed() {
+  const g = speedCanvas.getContext('2d'), F = '"Saira Condensed","Arial Narrow",Arial,sans-serif';
+  g.fillStyle = '#05080c'; g.fillRect(0, 0, 512, 200);
+  g.fillStyle = '#f2c230'; g.fillRect(0, 0, 512, 6);
+  g.textBaseline = 'middle'; g.textAlign = 'left'; g.fillStyle = '#9fb0bf'; g.font = `700 24px ${F}`; g.fillText('SMASH SPEED', 18, 32);
+  g.textAlign = 'right'; g.fillStyle = '#6b7a88'; g.font = `600 20px ${F}`;
+  g.fillText(smashRec.best ? `FASTEST ${smashRec.best} · ${smashRec.bestWho}` : 'FASTEST —', 494, 32);
+  g.textAlign = 'left';
+  if (smashRec.last) {
+    g.fillStyle = smashRec.who === 'YOU' ? '#ff6a52' : '#5aa6ff'; g.font = `800 30px ${F}`; g.fillText(smashRec.who, 18, 112);
+    g.textAlign = 'right'; g.fillStyle = '#ffd84a'; g.font = `800 112px ${F}`; g.fillText(String(smashRec.last), 420, 118);
+    g.fillStyle = '#eef2f5'; g.font = `700 30px ${F}`; g.fillText('KM/H', 494, 140);
+  } else { g.fillStyle = '#3a4652'; g.font = `800 96px ${F}`; g.textAlign = 'right'; g.fillText('---', 420, 118); }
+  speedTex.needsUpdate = true;
+}
+function showSmashSpeed(side, kmh) {
+  smashRec.last = Math.round(kmh); smashRec.who = side === 'P' ? 'YOU' : 'CPU';
+  if (smashRec.last > smashRec.best) { smashRec.best = smashRec.last; smashRec.bestWho = smashRec.who; }
+  drawSpeed();
+}
+drawSpeed();
+(() => {
+  const g = new THREE.Group(), dk = M(0x0f141a, 0.5);
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(3.3, 1.38, 0.14), dk); frame.position.y = 2.2; g.add(frame);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(3.12, 1.22), new THREE.MeshBasicMaterial({ map: speedTex, toneMapped: false })); scr.position.set(0, 2.2, 0.072); g.add(scr);
+  for (const sx of [-1, 1]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.55, 0.08), dk); l.position.set(sx * 1.3, 0.77, 0); g.add(l); }
+  g.position.set(-5.4, 0, -12.5); g.rotation.y = 0.32; shadowAllLater.push(g); scene.add(g);
+  // radar gun on a tripod, aimed down the court
+  const t = new THREE.Group(), metal = M(0x8a9199, 0.35, { metalness: 0.6 });
+  for (let k = 0; k < 3; k++) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.3, 6), metal); const a = k * Math.PI * 2 / 3;
+    leg.position.set(Math.cos(a) * 0.22, 0.62, Math.sin(a) * 0.22); leg.rotation.set(Math.sin(a) * 0.32, 0, -Math.cos(a) * 0.32); t.add(leg); }
+  const gun = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.16, 0.3), M(0x1b1f24, 0.4)); gun.position.y = 1.32; t.add(gun);
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.04, 16), new THREE.MeshBasicMaterial({ color: 0x2a6bff })); lens.rotation.x = Math.PI / 2; lens.position.set(0, 1.32, 0.17); t.add(lens);
+  t.position.set(0.4, 0, -12.9); scene.add(t);
+})();
+
+const ARENA_OBJS = scene.children.filter(o => !o.isLight && o !== courtSpot.target && o !== surround && o !== mat && o !== floor);   // floor markings stay readable from the player's end
+/* net with a deformable mesh */
+const postMat = M(0x2b2f33, 0.4, { metalness: 0.4 });
+[-DW, DW].forEach(x => {
+  const p = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.55, 12), postMat); p.position.set(x, 0.775, 0); p.castShadow = true; scene.add(p);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.06, 16), postMat); base.position.set(x, 0.03, 0); scene.add(base);
+});
+const netTex = canvasTex(64, 64, (g) => { g.strokeStyle = '#141414'; g.lineWidth = 4; g.strokeRect(0, 0, 64, 64); }, [6.1 / 0.019, 0.76 / 0.019]);
+const netGeo = new THREE.PlaneGeometry(DW * 2, 0.76, 64, 8);
+const netBase = Float32Array.from(netGeo.attributes.position.array);
+const netMesh = new THREE.Mesh(netGeo, new THREE.MeshBasicMaterial({ map: netTex, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false }));
+netMesh.position.set(0, NET_H - 0.38, 0); scene.add(netMesh);
+const tape = new THREE.Mesh(new THREE.BoxGeometry(DW * 2, 0.075, 0.02), M(0xf5f5f0, 0.6)); tape.position.set(0, NET_H - 0.0375, 0); tape.castShadow = true; scene.add(tape);
+const netWob = { x: 0, amp: 0, t: 9 };
+function netBulge(x, amp) { netWob.x = x; netWob.amp = amp; netWob.t = 0; }
+function updateNet(dt) {
+  if (netWob.t > 1.4) return;
+  netWob.t += dt;
+  const a = netWob.amp * 0.13 * Math.exp(-4 * netWob.t) * Math.cos(17 * netWob.t);
+  const arr = netGeo.attributes.position.array;
+  for (let i = 0; i < arr.length; i += 3) {
+    const x = netBase[i], y = netBase[i + 1];
+    arr[i + 2] = a * Math.exp(-((x - netWob.x) ** 2) / 0.12) * clamp((0.34 - y) / 0.5, 0, 1);
+  }
+  netGeo.attributes.position.needsUpdate = true;
+}
+
+/* ================= shuttlecock ================= */
+const featherTex = (() => {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+  const g = c.getContext('2d'); g.clearRect(0, 0, 256, 128);
+  for (let i = 0; i < 16; i++) {
+    const x0 = i * 16;
+    g.fillStyle = 'rgba(255,255,255,1)'; g.beginPath();
+    g.moveTo(x0 + 7, 128); g.lineTo(x0 + 1, 40); g.quadraticCurveTo(x0 + 3, 0, x0 + 8, 0); g.quadraticCurveTo(x0 + 13, 0, x0 + 15, 40); g.lineTo(x0 + 9, 128); g.fill();
+    g.fillStyle = 'rgba(210,210,200,1)'; g.fillRect(x0 + 7.5, 0, 1, 128);
+  }
+  g.fillStyle = '#3a3a3a'; g.fillRect(0, 84, 256, 3); g.fillRect(0, 104, 256, 3);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
+})();
+const shuttleMesh = new THREE.Group();
+(() => {
+  const cork = new THREE.Mesh(new THREE.SphereGeometry(0.0135, 16, 12), M(0xf6f1e4, 0.6)); cork.scale.y = 0.9;
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.01, 16), M(0x2f6fd0, 0.6)); band.position.y = -0.008;
+  const skirt = new THREE.Mesh(new THREE.CylinderGeometry(0.0145, 0.033, 0.066, 24, 1, true),
+    M(0xffffff, 0.7, { map: featherTex, transparent: true, alphaTest: 0.35, side: THREE.DoubleSide, emissive: 0x303030 }));
+  skirt.position.y = -0.047;
+  [cork, band, skirt].forEach(m => { m.castShadow = true; shuttleMesh.add(m); });
+  shuttleMesh.scale.setScalar(1.7);
+})();
+scene.add(shuttleMesh);
+const blob = new THREE.Mesh(new THREE.CircleGeometry(0.1, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35, depthWrite: false }));
+blob.rotation.x = -Math.PI / 2; blob.position.y = 0.012; scene.add(blob);
+const ring = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.28, 36), new THREE.MeshBasicMaterial({ color: 0xf2c230, transparent: true, opacity: 0.85, depthWrite: false }));
+ring.rotation.x = -Math.PI / 2; ring.position.y = 0.014; ring.visible = false; scene.add(ring);
+const mark = new THREE.Mesh(new THREE.RingGeometry(0.05, 0.11, 24), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
+mark.rotation.x = -Math.PI / 2; mark.position.y = 0.015; scene.add(mark);
+let markT = 9;
+const TRAIL_N = 24;
+const trailGeo = new THREE.BufferGeometry();
+trailGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TRAIL_N * 3), 3));
+const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.28 }));
+trail.frustumCulled = false; scene.add(trail);
+let trailPts = [];
+// shot preview: dashed flight arc, landing beam, stand-here ring and contact ghost
+const ARC_N = 70;
+const arcGeo = new THREE.BufferGeometry(); arcGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(ARC_N * 3), 3));
+const arc = new THREE.Line(arcGeo, new THREE.LineDashedMaterial({ color: 0xf2c230, dashSize: 0.18, gapSize: 0.12, transparent: true, opacity: 0.7, depthWrite: false }));
+arc.frustumCulled = false; arc.visible = false; scene.add(arc);
+const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.4, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xf2c230, transparent: true, opacity: 0.45, depthWrite: false }));
+beam.position.y = 0.7; beam.visible = false; scene.add(beam);
+const spot = new THREE.Mesh(new THREE.RingGeometry(0.28, 0.34, 40), new THREE.MeshBasicMaterial({ color: 0x6fd0ff, transparent: true, opacity: 0.8, depthWrite: false }));
+spot.rotation.x = -Math.PI / 2; spot.position.y = 0.016; spot.visible = false; scene.add(spot);
+const ghost = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 12), new THREE.MeshBasicMaterial({ color: 0x6fd0ff, transparent: true, opacity: 0.45, depthWrite: false }));
+ghost.visible = false; scene.add(ghost);
+// aim reticle on the opponent's half: where your queued shot is headed
+const reticle = new THREE.Group();
+const retMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false });
+reticle.add(new THREE.Mesh(new THREE.RingGeometry(0.22, 0.27, 40), retMat));
+for (const r of [0, Math.PI / 2]) { const bar = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.035), retMat); bar.rotation.z = r; reticle.add(bar); }
+reticle.rotation.x = -Math.PI / 2; reticle.position.y = 0.018; reticle.visible = false; scene.add(reticle);
+
+/* ================= pose layout & animation data ================= */
+const I = { h: 0, px: 1, pz: 2, air: 3, turn: 4, lean: 5, roll: 6, cturn: 7, clean: 8, croll: 9, fR: 10, fL: 13, fRy: 16, fLy: 17, hR: 18, rR: 21, eR: 24, hL: 27, eL: 30 };
+const N = 33;
+const UPPER = [4, 7, 8, 9]; for (let i = 18; i < 33; i++) UPPER.push(i);
+function mk(o, base) {
+  const p = new Float32Array(N); p.set(base);
+  for (const k in o) { const v = o[k]; if (Array.isArray(v)) { p[I[k]] = v[0]; p[I[k] + 1] = v[1]; p[I[k] + 2] = v[2]; } else p[I[k]] = v; }
+  return p;
+}
+// body frame: x = racket side, y = up, z = behind (the net is at -z)
+const READY = mk({ h: .87, px: 0, pz: 0, air: 0, turn: 0, lean: .14, roll: 0, cturn: 0, clean: .1, croll: 0,
+  fR: [.27, .08, .04], fL: [-.27, .08, -.08], fRy: .3, fLy: -.25,
+  hR: [.28, 1.22, -.38], rR: [.05, .85, -.52], eR: [.72, .95, .1],
+  hL: [-.33, 1.12, -.26], eL: [-.75, .9, .15] }, new Float32Array(N));
+const nrm = a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+
+const ANIMS = {};
+function defAnim(name, o) {
+  const keys = []; let prev = READY;
+  for (const [t, ov, e] of o.keys) { const p = ov === 'R' ? READY.slice() : mk(ov, prev); keys.push({ t, p, e: e || 'io' }); prev = p; }
+  const ci = keys.findIndex(k => k.t === 0), cp = keys[ci].p;
+  const rc = nrm([cp[I.rR], cp[I.rR + 1], cp[I.rR + 2]]);
+  const co = [cp[I.hR] + rc[0] * RK, cp[I.hR + 1] + rc[1] * RK + cp[I.air], cp[I.hR + 2] + rc[2] * RK];
+  ANIMS[name] = Object.assign({ sh: [0.19, 1.45, 0], mult: 1, step: 0.3, cost: 2 }, o, { name, keys, ci, rc, co, pre: -keys[0].t, post: keys[keys.length - 1].t });
+}
+// side-on, free arm pointing at the shuttle, racket hand by the ear with the elbow at shoulder height;
+// racket drops behind the back (elbow up), then the arm throws up to full reach, pronates and finishes down in front
+const OH_PREP = { h: .9, turn: .95, cturn: .3, lean: .02, clean: .02, fR: [.3, .08, .32], fL: [-.18, .08, -.22], fRy: 1.0, fLy: .6, hR: [.3, 1.62, .14], rR: [.08, .9, .42], eR: [.75, 1.5, .02], hL: [-.2, 1.84, -.36], eL: [-.62, 1.45, -.1] };
+const OH_DROP = { turn: .72, cturn: .25, lean: -.1, hR: [.3, 1.72, .12], rR: [0, -.8, .6], eR: [.45, 2.3, -.25], hL: [-.25, 1.6, -.35] };
+const OH_FOLLOW = { h: .9, turn: -.35, cturn: -.3, lean: .28, clean: .15, fR: [.2, .08, -.22], fRy: .1, hR: [.05, 1.45, -.45], rR: [-.25, -.55, -.8], eR: [.35, 1.5, -.6], hL: [-.2, 1.15, -.05] };
+// scissor kick: load on the back (right) leg, spring up, legs switch in the air, land on the left then step through with the right
+defAnim('overheadFH', { family: 'over', mult: 1, step: .3, cost: 3, keys: [
+  [-.34, OH_PREP],
+  [-.16, Object.assign({}, OH_DROP, { h: .86 })],
+  [-.05, { air: .07, h: .92, fR: [.29, .14, .28], fL: [-.18, .12, -.18] }, 'out'],
+  [0, { air: .16, h: .97, turn: -.05, cturn: -.1, lean: .06, clean: .05, fR: [.24, .22, .08], fL: [-.2, .18, -.02], fRy: .5, hR: [.24, 1.99, -.12], rR: [0, .96, -.28], eR: [.5, 2.2, .3], hL: [-.2, 1.22, -.1], eL: [-.6, 1.0, .2] }, 'in'],
+  [.1, Object.assign({}, OH_FOLLOW, { air: .11, fR: [.2, .2, -.24], fL: [-.22, .24, .32] }), 'out'],
+  [.22, { air: 0, h: .83, fL: [-.22, .08, .34], fR: [.2, .13, -.26] }, 'in'],
+  [.32, { h: .86, fR: [.2, .08, -.28], turn: -.2, cturn: -.1, lean: .15, hR: [-.12, 1.12, -.28], rR: [-.35, -.7, -.45], eR: [.4, 1.2, -.3], hL: [-.3, 1.1, -.1] }],
+  [.55, 'R']] });
+defAnim('smashOH', { family: 'over', mult: 1, step: .3, cost: 5, keys: [
+  [-.3, OH_PREP],
+  [-.14, Object.assign({}, OH_DROP, { h: .85 })],
+  [-.04, { air: .06, h: .92, fR: [.29, .14, .28], fL: [-.18, .12, -.18] }, 'out'],
+  [0, { air: .14, h: .97, turn: -.1, cturn: -.12, lean: .14, clean: .08, fR: [.24, .2, .06], fL: [-.2, .16, -.02], fRy: .5, hR: [.24, 1.97, -.16], rR: [0, .9, -.45], eR: [.5, 2.2, .3], hL: [-.2, 1.2, -.05], eL: [-.6, 1, .2] }, 'in'],
+  [.1, Object.assign({}, OH_FOLLOW, { lean: .4, hR: [.05, 1.35, -.5], rR: [-.2, -.65, -.75], air: .09, fR: [.2, .18, -.26], fL: [-.22, .22, .3] }), 'out'],
+  [.2, { air: 0, h: .82, fL: [-.22, .08, .32], fR: [.2, .12, -.3] }, 'in'],
+  [.3, { h: .85, fR: [.2, .08, -.32], lean: .25, hR: [-.12, 1.08, -.3], rR: [-.35, -.72, -.45], eR: [.4, 1.2, -.3] }],
+  [.55, 'R']] });
+defAnim('jumpSmash', { family: 'over', mult: 1.12, step: .35, cost: 10, keys: [
+  [-.52, { h: .8, lean: .15, turn: .5, cturn: .2, fR: [.26, .08, .18], fL: [-.24, .08, -.12], hR: [.4, 1.35, -.05], rR: [.2, .6, .7], eR: [.8, 1.2, .3], hL: [-.25, 1.3, -.35] }],
+  [-.32, Object.assign({}, OH_PREP, { h: .94, air: .06, fR: [.28, .12, .28], fL: [-.18, .12, -.2] }), 'out'],
+  [-.12, Object.assign({}, OH_DROP, { air: .32, h: .96, lean: -.1, fR: [.26, .3, .3], fL: [-.2, .26, -.12] }), 'out'],
+  [0, { air: .4, h: .97, turn: -.1, cturn: -.12, lean: .14, fR: [.22, .22, -.22], fL: [-.2, .2, .3], hR: [.28, 1.97, -.14], rR: [0, .9, -.45], eR: [.7, 2.1, .35], hL: [-.35, 1.25, -.12], eL: [-.7, 1, .2] }, 'in'],
+  [.18, { air: .14, h: .92, turn: -.5, cturn: -.3, lean: .35, fR: [.22, .15, -.15], fL: [-.22, .2, .15], hR: [-.12, 1.1, -.4], rR: [-.4, -.6, -.6], eR: [.3, 1.5, -.6], hL: [-.35, 1.1, .2] }, 'io'],
+  [.3, { air: 0, h: .78, fR: [.25, .08, -.12], fL: [-.24, .08, .18] }, 'in'],
+  [.6, 'R']] });
+defAnim('roundHead', { family: 'over', mult: .92, step: .3, cost: 4, keys: [
+  [-.34, { h: .92, turn: .6, cturn: .2, lean: -.05, roll: -.05, fR: [.2, .08, .25], fL: [-.28, .08, .05], fRy: .7, fLy: -.3, hR: [.35, 1.78, .12], rR: [-.1, .8, .6], eR: [.85, 1.8, .25], hL: [-.3, 1.9, -.35], eL: [-.7, 1.5, 0] }],
+  [-.13, { roll: -.12, croll: -.1, hR: [.18, 1.8, .1], rR: [-.35, -.5, .8], eR: [.55, 2.35, -.05], hL: [-.3, 1.6, -.3] }],
+  [0, { h: .96, turn: .05, cturn: .05, lean: .02, roll: -.14, croll: -.22, hR: [-.02, 1.95, -.05], rR: [-.35, .9, -.25], eR: [.55, 2.3, .25], hL: [-.45, 1.2, .05], eL: [-.8, 1.1, .2] }, 'in'],
+  [.14, { roll: -.05, croll: -.05, turn: -.3, lean: .2, hR: [-.25, 1.3, -.3], rR: [-.55, -.45, -.6], eR: [.2, 1.6, -.6], fL: [-.35, .08, .1] }, 'out'],
+  [.5, 'R']] });
+defAnim('lateOverhead', { family: 'over', mult: .8, step: .35, cost: 5, keys: [
+  [-.36, { h: .9, turn: 1.1, cturn: .3, lean: -.15, fR: [.32, .08, .45], fL: [-.15, .08, 0], fRy: 1.2, fLy: .6, hR: [.45, 1.7, .3], rR: [.1, .6, .8], eR: [.95, 1.6, .45], hL: [-.2, 1.9, -.2], eL: [-.7, 1.5, 0] }],
+  [-.12, { air: .15, lean: -.3, fR: [.3, .25, .42], fL: [-.18, .15, .1], hR: [.36, 1.72, .28], rR: [.05, -.6, .8], eR: [.6, 2.3, .1] }, 'out'],
+  [0, { air: .22, h: .95, turn: .5, cturn: .1, lean: -.25, fR: [.24, .2, -.12], fL: [-.2, .2, .45], hR: [.3, 1.93, .25], rR: [.05, .97, .12], eR: [.7, 2.1, .45], hL: [-.4, 1.4, -.1] }, 'in'],
+  [.2, { air: 0, h: .82, lean: .05, turn: 0, cturn: -.1, fR: [.25, .08, -.05], fL: [-.22, .08, .42], hR: [0, 1.3, -.2], rR: [-.3, -.4, -.8], eR: [.3, 1.5, -.5] }],
+  [.55, 'R']] });
+defAnim('driveFH', { family: 'side', mult: .9, step: .35, cost: 2, keys: [
+  [-.26, { h: .86, turn: .75, cturn: .2, lean: .12, fR: [.5, .08, .08], fRy: 1.0, fL: [-.22, .08, -.05], hR: [.45, 1.45, .3], rR: [.35, .55, .75], eR: [.85, 1.0, .35], hL: [-.35, 1.2, -.35] }],
+  [0, { h: .84, turn: .1, cturn: 0, lean: .15, roll: .12, fR: [.6, .08, -.05], hR: [.6, 1.28, -.2], rR: [.84, .2, -.5], eR: [.6, .75, .3], hL: [-.45, 1.15, 0] }, 'in'],
+  [.14, { turn: -.35, cturn: -.2, roll: .05, hR: [.1, 1.42, -.45], rR: [-.6, .45, -.65], eR: [.4, .9, -.3] }, 'out'],
+  [.38, 'R']] });
+defAnim('driveBH', { family: 'side', mult: .8, step: .35, cost: 2, keys: [
+  [-.26, { h: .86, turn: -.95, cturn: -.3, lean: .12, fR: [-.3, .08, -.32], fRy: -.9, fL: [-.28, .08, .2], fLy: -.6, hR: [-.1, 1.42, -.12], rR: [-.35, .6, .7], eR: [-.4, 1.7, -.5], hL: [-.3, 1.25, .1] }],
+  [0, { turn: -.9, cturn: -.1, hR: [-.3, 1.38, -.35], rR: [-.82, .1, -.56], eR: [-.2, 1.8, -.6], hL: [-.2, 1.2, .25] }, 'in'],
+  [.14, { turn: -.7, cturn: .1, hR: [-.45, 1.55, -.15], rR: [-.55, .7, .45], eR: [-.2, 1.9, -.3] }, 'out'],
+  [.38, 'R']] });
+defAnim('lateFH', { family: 'side', mult: .65, step: .4, cost: 3, keys: [
+  [-.26, { h: .84, turn: 1.15, cturn: .2, lean: .05, fR: [.6, .08, .45], fRy: 1.3, fL: [-.15, .08, -.1], hR: [.42, 1.5, .3], rR: [.2, .8, .5], eR: [.9, 1.0, .4], hL: [-.35, 1.25, -.3] }],
+  [0, { h: .8, turn: 1.3, cturn: .1, roll: .1, hR: [.45, 1.38, .5], rR: [.3, .1, .95], eR: [.9, 1.0, .2] }, 'in'],
+  [.12, { hR: [.5, 1.48, .3], rR: [.35, .6, -.7] }, 'out'],
+  [.45, 'R']] });
+defAnim('lateBH', { family: 'side', mult: .7, step: .4, cost: 3, keys: [
+  [-.3, { h: .86, turn: -1.5, cturn: -.3, lean: .1, fR: [-.45, .08, .45], fRy: -1.6, fL: [.1, .08, -.1], fLy: -.8, hR: [0, 1.45, -.25], rR: [-.2, -.8, .3], eR: [-.3, 1.8, .2], hL: [-.15, 1.2, -.3] }],
+  [0, { h: .9, turn: -1.8, cturn: -.1, hR: [-.33, 1.72, .15], rR: [-.39, .59, .69], eR: [-.4, 1.9, 0], hL: [.1, 1.2, -.2] }, 'in'],
+  [.14, { hR: [-.3, 1.8, .25], rR: [-.3, .95, -.1] }, 'out'],
+  [.5, 'R']] });
+defAnim('lungeFH', { family: 'net', mult: .5, step: .75, cost: 4, keys: [
+  [-.34, { h: .86, lean: .18, fR: [.3, .14, -.1], hR: [.35, 1.15, -.45], rR: [.3, .55, -.75], hL: [-.35, 1.1, -.1] }],
+  [-.14, { h: .74, lean: .3, pz: -.18, fR: [.45, .24, -.75], fL: [-.22, .08, .2], hR: [.45, .95, -.85], rR: [.3, .25, -.9], hL: [-.42, .85, .25] }],
+  [0, { h: .6, lean: .38, pz: -.36, turn: .15, fR: [.5, .08, -1.05], fRy: .35, fL: [-.22, .08, .36], fLy: -.6, hR: [.45, .87, -.95], rR: [.25, -.15, -.95], eR: [.9, .9, -.5], hL: [-.38, .66, .42], eL: [-.55, .95, .2] }, 'in'],
+  [.12, { hR: [.46, .95, -1.0], rR: [.25, .35, -.9] }, 'out'],
+  [.3, {}],
+  [.42, { h: .66, lean: .3, pz: -.3, hR: [.3, 1.05, -.6], rR: [.2, .6, -.75], eR: [.7, .9, -.2] }]] });
+defAnim('lungeBH', { family: 'net', mult: .45, step: .75, cost: 4, keys: [
+  [-.34, { h: .86, lean: .18, turn: -.3, fR: [.05, .14, -.15], hR: [-.1, 1.2, -.4], rR: [-.35, .5, -.75], eR: [-.2, 1.5, -.7], hL: [-.3, 1.1, 0] }],
+  [-.14, { h: .74, lean: .3, pz: -.18, px: -.08, turn: -.45, fR: [-.25, .24, -.75], fL: [.18, .08, .2], hR: [-.3, .95, -.8], rR: [-.35, .2, -.9] }],
+  [0, { h: .6, lean: .38, pz: -.36, px: -.12, turn: -.5, fR: [-.3, .08, -1.02], fRy: -.4, fL: [.2, .08, .36], fLy: .3, hR: [-.33, .88, -.95], rR: [-.35, -.15, -.92], eR: [-.1, 1.3, -.9], hL: [.1, 1.0, .4], eL: [-.3, .9, .4] }, 'in'],
+  [.12, { hR: [-.33, .95, -.98], rR: [-.35, .3, -.88] }, 'out'],
+  [.3, {}],
+  [.42, { h: .66, lean: .3, pz: -.3, hR: [.3, 1.05, -.6], rR: [.2, .6, -.75], eR: [.7, .9, -.2] }]] });
+defAnim('lungeLowFH', { family: 'net', mult: .45, step: .8, cost: 5, keys: [
+  [-.34, { h: .86, lean: .2, fR: [.3, .14, -.1], hR: [.35, 1.1, -.45], rR: [.3, .5, -.8], hL: [-.35, 1.1, -.1] }],
+  [-.14, { h: .72, lean: .34, pz: -.2, fR: [.45, .24, -.8], fL: [-.22, .08, .22], hR: [.45, .85, -.88], rR: [.3, .1, -.95], hL: [-.42, .82, .26] }],
+  [0, { h: .56, lean: .45, pz: -.4, turn: .15, fR: [.5, .08, -1.1], fRy: .35, fL: [-.22, .08, .4], fLy: -.6, hR: [.45, .7, -.98], rR: [.25, -.4, -.88], eR: [.9, .85, -.5], hL: [-.38, .62, .46], eL: [-.55, .92, .22] }, 'in'],
+  [.12, { hR: [.46, .82, -1.0], rR: [.25, .3, -.92] }, 'out'],
+  [.32, {}],
+  [.44, { h: .62, lean: .36, pz: -.33, hR: [.3, 1.0, -.6], rR: [.2, .55, -.8], eR: [.7, .9, -.2] }]] });
+defAnim('lungeLowBH', { family: 'net', mult: .4, step: .8, cost: 5, keys: [
+  [-.34, { h: .86, lean: .2, turn: -.3, fR: [.05, .14, -.15], hR: [-.1, 1.15, -.4], rR: [-.35, .45, -.8], eR: [-.2, 1.5, -.7], hL: [-.3, 1.1, 0] }],
+  [-.14, { h: .72, lean: .34, pz: -.2, px: -.08, turn: -.45, fR: [-.25, .24, -.8], fL: [.18, .08, .22], hR: [-.3, .85, -.82], rR: [-.35, .05, -.93] }],
+  [0, { h: .56, lean: .45, pz: -.4, px: -.12, turn: -.5, fR: [-.3, .08, -1.06], fRy: -.4, fL: [.2, .08, .4], fLy: .3, hR: [-.33, .72, -.95], rR: [-.35, -.4, -.85], eR: [-.1, 1.25, -.9], hL: [.1, .95, .42], eL: [-.3, .9, .4] }, 'in'],
+  [.12, { hR: [-.33, .82, -.98], rR: [-.35, .25, -.9] }, 'out'],
+  [.32, {}],
+  [.44, { h: .62, lean: .36, pz: -.33, hR: [.3, 1.0, -.6], rR: [.2, .55, -.8], eR: [.7, .9, -.2] }]] });
+defAnim('digFH', { family: 'low', mult: .6, step: .45, cost: 3, keys: [
+  [-.28, { h: .8, turn: .5, lean: .15, fR: [.42, .15, -.05], fRy: .9, hR: [.45, 1.1, .12], rR: [.5, .5, .7], eR: [.8, .9, .3], hL: [-.4, 1.1, -.2] }],
+  [0, { h: .68, px: .18, roll: .25, lean: .2, turn: .2, fR: [.75, .08, -.1], fRy: 1.0, fL: [-.2, .08, .1], hR: [.62, .78, -.35], rR: [.7, -.3, -.65], eR: [.8, 1.2, .2], hL: [-.5, 1.0, 0] }, 'in'],
+  [.14, { hR: [.45, 1.05, -.5], rR: [.4, .65, -.65], roll: .15 }, 'out'],
+  [.45, 'R']] });
+defAnim('digBH', { family: 'low', mult: .5, step: .45, cost: 3, keys: [
+  [-.28, { h: .8, turn: -.8, lean: .15, fR: [-.3, .15, -.3], fRy: -.9, hR: [-.1, 1.2, -.15], rR: [-.3, .55, .75], eR: [-.3, 1.6, -.4], hL: [-.35, 1.1, .15] }],
+  [0, { h: .68, px: -.15, roll: -.22, lean: .2, turn: -.7, fR: [-.55, .08, -.3], fRy: -1.0, fL: [.18, .08, .15], hR: [-.4, .85, -.38], rR: [-.7, -.3, -.65], eR: [-.2, 1.4, -.6], hL: [.1, 1.1, .2] }, 'in'],
+  [.14, { hR: [-.45, 1.1, -.3], rR: [-.6, .6, -.4] }, 'out'],
